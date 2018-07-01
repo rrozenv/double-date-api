@@ -1,0 +1,4 @@
+{ 
+    "name": "Double Date - Development",
+    "db-host": "mongodb://localhost/doubleDate"
+}
