@@ -1,13 +1,27 @@
 const {Position, validate} = require('../models/position'); 
 const Fund = require('../models/fund').Fund; 
 const Portfolio = require('../models/portfolio').Portfolio; 
+const User = require('../models/user').User;
+const fetchStocks = require('../iex_api/iex_stocks').fetchStocks; 
 const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
-  
+  let positions = await Position.find({ user: req.user._id });
+  const tickersString = positions.map((pos) => pos.ticker).toString();
+  const stocks = await fetchStocks('quote', tickersString);
+
+  positions.forEach(async (pos) => { 
+    const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
+    pos.currentPrice = stock.latestPrice
+    await pos.save();
+  });
+
+  console.log(positions);
+
+  res.send(positions);
 });
 
 router.post('/', auth, async (req, res) => {
@@ -24,7 +38,8 @@ router.post('/', auth, async (req, res) => {
     });
   
   const position = new Position(
-    { type: type, 
+    { user: req.user,
+      type: type, 
       ticker: ticker, 
       buyPrice: buyPrice, 
       currentPrice: currentPrice,
@@ -48,8 +63,8 @@ router.post('/', auth, async (req, res) => {
         
       //3. Add position to portfolio 
       populatedPort.positions.push(position);
-
-      await populatedPort.save()
+      
+      await Promise.all([position.save(), populatedPort.save()]) 
 
   });
 

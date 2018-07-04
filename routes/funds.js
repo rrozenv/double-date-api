@@ -1,11 +1,14 @@
 const {Fund, validate} = require('../models/fund'); 
 const Portfolio = require('../models/portfolio').Portfolio; 
+const fetchStocks = require('../iex_api/iex_stocks').fetchStocks; 
+const fetchCurrentPricesFor = require('../iex_api/iex_stocks').fetchCurrentPricesFor; 
 const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
+  
   const funds = await Fund.find()
     .populate('admin')
     .populate({
@@ -15,21 +18,36 @@ router.get('/', auth, async (req, res) => {
 
   const newFunds = await Promise.all(funds.map(async (fund) => {
       
-    const userPortfolio = fund.portfolios.filter((port) => { 
+    const userPort = fund.portfolios.filter((port) => { 
       return `${port.user}` === `${req.user._id}` 
     })
 
-    const populatedUserPortfolio = await Portfolio
-      .findById(userPortfolio[0]._id)
+    const populatedUserPort = await Portfolio
+      .findById(userPort[0]._id)
       .populate('user')
-      
+      .populate([
+        {
+          path: 'user',
+          model: 'User'
+        },
+        {
+          path: 'positions',
+          model: 'Position'
+        }
+      ]);
+    
+    if (populatedUserPort.positions.length !== 0) {
+      const updatedPositions = await fetchCurrentPricesFor(populatedUserPort.positions);
+      populatedUserPort.positions = updatedPositions
+    }
+
     return { 
       _id: fund._id,
       admin: fund.admin,
       name: fund.name,
       maxPlayers: fund.maxPlayers,
       portfolios: fund.portfolios.map((fund) => fund._id),
-      currentUserPortfolio: populatedUserPortfolio
+      currentUserPortfolio: populatedUserPort
     }
 
   }));

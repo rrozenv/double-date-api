@@ -19,4 +19,19 @@ async function fetchStocks(typesString, tickersString) {
     return stocks
 }
 
-module.exports = fetchStocks;
+async function fetchCurrentPricesFor(positions) {
+    const tickersString = positions.map(pos => pos.ticker).toString();
+    const stocks = await fetchStocks('quote', tickersString);
+
+    positions.forEach(async (pos) => { 
+      const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
+      pos.currentPrice = stock.latestPrice
+      await pos.save();
+    });
+
+    return positions
+}
+
+exports.fetchStocks = fetchStocks;
+exports.fetchCurrentPricesFor = fetchCurrentPricesFor;
+//module.exports = fetchCurrentPricesFor;

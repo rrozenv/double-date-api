@@ -1,4 +1,4 @@
-const fetchStocks = require('../iex_api/iex_stocks'); 
+const fetchStocks = require('../iex_api/iex_stocks').fetchStocks; 
 const express = require('express');
 const router = express.Router();
 
