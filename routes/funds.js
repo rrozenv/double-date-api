@@ -61,9 +61,9 @@ router.post('/', auth, async (req, res) => {
   const { error } = validate(req.body); 
   if (error) return res.status(400).send(error.details[0].message);
   
-  const { name, maxPlayers } = req.body
+  const { name, maxPlayers, maxCashBalance } = req.body
   
-  const portfolio = new Portfolio({ user: req.user });
+  const portfolio = new Portfolio({ user: req.user, cashBalance: maxCashBalance });
   const fund = new Fund({ 
     admin: req.user,
     name: name,

@@ -63,6 +63,10 @@ router.post('/', auth, async (req, res) => {
         
       //3. Add position to portfolio 
       populatedPort.positions.push(position);
+
+      //4. Update cash balance
+      const positionCost = buyPrice * shares
+      populatedPort.cashBalance -= positionCost
       
       await Promise.all([position.save(), populatedPort.save()]) 
 

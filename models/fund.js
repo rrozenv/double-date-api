@@ -29,6 +29,7 @@ function validateFund(fund) {
   const schema = {
     name: Joi.string().min(5).max(50).required(),
     maxPlayers: Joi.number().min(1).required(),
+    maxCashBalance: Joi.number().min(1).required(),
   };
 
   return Joi.validate(fund, schema);
