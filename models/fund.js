@@ -19,6 +19,11 @@ const Fund = mongoose.model('Fund', new mongoose.Schema({
     min: 0,
     max: 255
   },
+  maxCashBalance: { 
+    type: Number, 
+    required: true,
+    min: 0
+  },
   portfolios: [{ 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Portfolio'
@@ -30,6 +35,7 @@ function validateFund(fund) {
     name: Joi.string().min(5).max(50).required(),
     maxPlayers: Joi.number().min(1).required(),
     maxCashBalance: Joi.number().min(1).required(),
+    invitedPhoneNumbers: Joi.array().items(Joi.string())
   };
 
   return Joi.validate(fund, schema);

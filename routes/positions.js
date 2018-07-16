@@ -10,17 +10,18 @@ const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
   let positions = await Position.find({ user: req.user._id });
-  const tickersString = positions.map((pos) => pos.ticker).toString();
-  const stocks = await fetchStocks('quote', tickersString);
-
-  positions.forEach(async (pos) => { 
-    const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
-    pos.currentPrice = stock.latestPrice
-    await pos.save();
-  });
-
-  console.log(positions);
-
+  if (positions.length > 0) {
+    const tickersString = positions.map((pos) => pos.ticker).toString();
+    const stocks = await fetchStocks('quote', tickersString);
+  
+    positions.forEach(async (pos) => { 
+      const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
+      pos.currentPrice = stock.latestPrice
+      await pos.save();
+    });
+  
+    console.log(positions);
+  }
   res.send(positions);
 });
 

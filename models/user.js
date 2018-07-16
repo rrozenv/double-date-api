@@ -17,6 +17,13 @@ const userSchema = new mongoose.Schema({
     maxlength: 255,
     unique: true
   },
+  phoneNumber: {
+    type: String,
+    required: true,
+    minlength: 5,
+    maxlength: 255,
+    unique: true
+  },
   isRegistered: Boolean,
   isAdmin: Boolean
 });
@@ -31,7 +38,8 @@ const User = mongoose.model('User', userSchema);
 function validateUser(user) {
   const schema = {
     name: Joi.string().min(5).max(50).required(),
-    email: Joi.string().min(5).max(50).required().email(),
+    email: Joi.string(),
+    phoneNumber: Joi.string(),
     googleToken: Joi.string()
   };
 

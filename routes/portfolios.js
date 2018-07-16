@@ -30,12 +30,12 @@ router.get('/', auth, async (req, res) => {
   if (tickersString !== '') { 
     const stocks = await fetchStocks('quote', tickersString);
     portfolios.forEach(async (port) => { 
-        port.positions.forEach(async (pos) => { 
-            const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
-            pos.currentPrice = stock.latestPrice
-            await pos.save();
-          });
+      port.positions.forEach(async (pos) => { 
+          const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
+          pos.currentPrice = stock.latestPrice
+          await pos.save();
       });
+    });
     
     console.log(portfolios);
   }

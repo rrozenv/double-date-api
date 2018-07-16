@@ -10,6 +10,7 @@ const funds = require('./routes/funds');
 const stocks = require('./routes/stocks');
 const positions = require('./routes/positions');
 const portfolios = require('./routes/portfolios');
+const invitations = require('./routes/invitations');
 const express = require('express');
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/funds', funds);
 app.use('/api/stocks', stocks);
 app.use('/api/positions', positions);
 app.use('/api/portfolios', portfolios);
+app.use('/api/invitations', invitations);
 app.use(error);
 
 const port = process.env.PORT || 3000;
