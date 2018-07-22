@@ -1,3 +1,4 @@
+const Stock = require('../models/stock').Stock; 
 const fetchStocks = require('../iex_api/iex_stocks').fetchStocks; 
 const express = require('express');
 const router = express.Router();
@@ -12,25 +13,24 @@ router.get('/', async (req, res) => {
     res.send(stocks);
 });
 
+router.get('/search', async (req, res) => {
+    const { isExact, query } = req.query
+    if (isExact) {
+        const exactStocks = await findExactStocksFor(query);
+        res.send(exactStocks);
+    } else {
+        const stocks = await Stock.find({ $text: { $search: query } });
+        res.send(stocks);
+    }
+});
+
+async function findExactStocksFor(query) {
+    const tickersArray = query.split(',');
+    const stocks = await Promise.all(tickersArray.map(async (ticker) => { 
+       const stock = await Stock.findOne({ symbol: ticker.toUpperCase() })
+       return stock
+    }));
+    return stocks
+}
+
 module.exports = router;
-
-
-    // request
-    //     .get('https://api.iextrading.com/1.0/stock/market/batch')
-    //     .query({ types: 'quote', symbols: tickersString })
-    //     .then((res) => {
-    //         const stocks = tickersArray.map((ticker) => { 
-    //             return { 
-    //                 symbol: res.body[ticker.toUpperCase()].quote.symbol,
-    //                 companyName: res.body[ticker.toUpperCase()].quote.companyName,
-    //                 latestPrice: res.body[ticker.toUpperCase()].quote.latestPrice,
-    //                 changePercent: res.body[ticker.toUpperCase()].quote.changePercent
-    //             }
-    //         });
-
-    //         console.log(stocks);
-    //         res.send(stocks);
-    //     })
-    //     .catch((err) => {
-    //         console.log(err.message);
-    //     });

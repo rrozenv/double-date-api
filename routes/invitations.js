@@ -1,6 +1,7 @@
 const Fund = require('../models/fund').Fund; 
 const Invitation = require('../models/invitation').Invitation; 
 const Portfolio = require('../models/portfolio').Portfolio; 
+const sendNotification = require('../middleware/notifications').sendNotification;
 const User = require('../models/user').User;
 const auth = require('../middleware/auth');
 const express = require('express');
@@ -12,6 +13,10 @@ router.get('/', auth, async (req, res) => {
   const invitations = await Invitation
     .find({ recievedByPhoneNumber: user.phoneNumber, status: 'pending' })
     .populate('sentBy')
+
+//   invitations.forEach(async (invite) => { 
+//     await sendNotification(invite.recievedByPhoneNumber);
+//   });
 
   const response = await Promise.all(invitations.map(async (invite) => { 
     const fund = await Fund.findById(invite.fund)

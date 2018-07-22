@@ -17,6 +17,9 @@ router.get('/', auth, async (req, res) => {
     positions.forEach(async (pos) => { 
       const stock = stocks.find((stock) => stock.symbol.toLowerCase() === pos.ticker.toLowerCase());
       pos.currentPrice = stock.latestPrice
+      // if (pos.orderType === 'openLimit' && pos.buyPrice >= pos.currentPrice) {
+
+      // }
       await pos.save();
     });
   
@@ -29,7 +32,7 @@ router.post('/', auth, async (req, res) => {
   const { error } = validate(req.body); 
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { type, ticker, buyPrice, currentPrice, shares, fundIds } = req.body
+  const { type, orderType, ticker, buyPrice, currentPrice, shares, fundIds } = req.body
 
   //1. Find funds with given fund ids
   const funds = await Fund.find({ _id: { $in: fundIds } })
@@ -41,6 +44,7 @@ router.post('/', auth, async (req, res) => {
   const position = new Position(
     { user: req.user,
       type: type, 
+      orderType: orderType,
       ticker: ticker, 
       buyPrice: buyPrice, 
       currentPrice: currentPrice,
@@ -66,11 +70,12 @@ router.post('/', auth, async (req, res) => {
       populatedPort.positions.push(position);
 
       //4. Update cash balance
-      const positionCost = buyPrice * shares
-      populatedPort.cashBalance -= positionCost
+      if (orderType !== 'openLimit') {
+        const positionCost = buyPrice * shares
+        populatedPort.cashBalance -= positionCost
+      }
       
       await Promise.all([position.save(), populatedPort.save()]) 
-
   });
 
   console.log(position);

@@ -12,6 +12,12 @@ const positionSchema = new mongoose.Schema({
     minlength: 0,
     maxlength: 50
   },
+  orderType: {
+    type: String,
+    required: true,
+    minlength: 0,
+    maxlength: 50
+  },
   ticker: {
     type: String,
     required: true,
@@ -52,7 +58,8 @@ function validatePosition(position) {
     buyPrice: Joi.number().min(0).required(),
     currentPrice: Joi.number().min(0).required(),
     shares: Joi.number().min(0).required(),
-    fundIds: Joi.array().items(Joi.string()).required()
+    fundIds: Joi.array().items(Joi.string()).required(),
+    orderType: Joi.string().min(0).max(50).required()
   };
 
   return Joi.validate(position, schema);

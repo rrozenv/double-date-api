@@ -2,14 +2,16 @@ const {Fund, validate} = require('../models/fund');
 const Portfolio = require('../models/portfolio').Portfolio; 
 const Invitation = require('../models/invitation').Invitation; 
 const fetchStocks = require('../iex_api/iex_stocks').fetchStocks; 
-const fetchCurrentPricesFor = require('../iex_api/iex_stocks').fetchCurrentPricesFor; 
+const fetchCurrentPricesFor = require('../iex_api/iex_stocks').fetchCurrentPricesFor;
+const saveStockTickersToDB = require('../iex_api/iex_stocks').saveStockTickersToDB; 
 const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
-  
+  //saveStockTickersToDB();
+
   const funds = await Fund.find()
     .populate('admin')
     .populate({
@@ -39,7 +41,21 @@ router.get('/', auth, async (req, res) => {
     
     if (populatedUserPort.positions.length !== 0) {
       const updatedPositions = await fetchCurrentPricesFor(populatedUserPort.positions);
+      const openLimitPositions = updatedPositions.filter((pos) => pos.orderType === 'openLimit');
+      
+      openLimitPositions.forEach(async (pos) => { 
+        if (pos.buyPrice >= 183.0) {
+          const positionCost = pos.buyPrice * pos.shares
+          populatedUserPort.cashBalance -= positionCost
+          pos.orderType = 'closedLimit' 
+        } 
+      });
+      
       populatedUserPort.positions = updatedPositions
+      
+      if (openLimitPositions.length > 0) { 
+        await populatedUserPort.save()
+      }
     }
 
     return { 
@@ -97,11 +113,7 @@ router.post('/', auth, async (req, res) => {
     .populate('user');
 
   const updatedFund = { 
-    _id: newFund._id,
-    admin: newFund.admin,
-    name: newFund.name,
-    maxPlayers: newFund.maxPlayers,
-    portfolios: newFund.portfolios,
+    ...newFund.toObject(),
     currentUserPortfolio: userPortfolio
   };
 

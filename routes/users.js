@@ -3,7 +3,7 @@ const {OAuth2Client} = require('google-auth-library');
 const client = new OAuth2Client(config.get('googleClientId'));
 const auth = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
-const {User, validate} = require('../models/user');
+const {User, validateUser, validateToken} = require('../models/user');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -14,7 +14,7 @@ router.get('/me', auth, async (req, res) => {
 });
 
 router.post('/googleAuth', async (req, res) => {
-  const { error } = validate(req.body); 
+  const { error } = validateUser(req.body); 
   if (error) return res.status(400).send(error.details[0].message);
 
   const { name, email, googleToken } = req.body
@@ -36,7 +36,7 @@ router.post('/googleAuth', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { error } = validate(req.body); 
+  const { error } = validateUser(req.body); 
   if (error) return res.status(400).send(error.details[0].message);
 
   const { name, phoneNumber } = req.body
@@ -50,6 +50,17 @@ router.post('/', async (req, res) => {
   
   const token = user.generateAuthToken();
   return res.header('x-auth-token', token).send(user);
+});
+
+router.post('/:id/apnToken', async (req, res) => {
+  const { error } = validateToken(req.body); 
+  if (error) return res.status(400).send(error.details[0].message);
+
+  let user = await User.findById(req.params.id);
+  user.apnToken = req.body.token
+  await user.save();
+
+  res.send(user);
 });
 
 module.exports = router; 

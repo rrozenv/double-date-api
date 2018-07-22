@@ -1,4 +1,5 @@
 const request = require('superagent');
+const Stock = require('../models/stock').Stock; 
 
 async function fetchStocks(typesString, tickersString) {
     const tickersArray = tickersString.split(',');
@@ -38,6 +39,19 @@ async function fetchCurrentPricesFor(positions) {
     return positions
 }
 
+async function saveStockTickersToDB() {
+    const stocksPayload = await request
+        .get('https://api.iextrading.com/1.0/ref-data/symbols');
+
+    stocksPayload.body.forEach(async (load) => { 
+        const stock = new Stock({ 
+            symbol: load.symbol,
+            companyName: load.name
+        })
+        await stock.save()
+    });
+}
+
 exports.fetchStocks = fetchStocks;
 exports.fetchCurrentPricesFor = fetchCurrentPricesFor;
-//module.exports = fetchCurrentPricesFor;
+exports.saveStockTickersToDB = saveStockTickersToDB;
